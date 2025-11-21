@@ -76,23 +76,30 @@ export class Timer {
     const w = this.#wrapper;
     w.className = 'timer';
 
+    const inputs = document.createElement('div');
+    inputs.className = 'timer-inputs'
+    w.appendChild(inputs);
+
     w.timerName = document.createElement('input');
     w.timerName.type = 'text';
     w.timerName.placeholder = 'タイマー名';
     w.timerName.className = 'timer-name';
-    w.appendChild(w.timerName);
+    w.timerName.id = 'timer-name' + addTimer.value;
+    inputs.appendChild(w.timerName);
 
     w.timerInitialized = document.createElement('input');
     w.timerInitialized.type = 'text';
     w.timerInitialized.placeholder = '初期化値';
-    w.timerInitialized.className = 'timer-initialized';
-    w.appendChild(w.timerInitialized);
+    w.timerInitialized.className = 'timer-initialized even-numbered-horizontal';
+    w.timerInitialized.id = 'timer-initialized' + addTimer.value;
+    inputs.appendChild(w.timerInitialized);
 
     w.timerDisplay = document.createElement('input');
     w.timerDisplay.type = 'text';
     w.timerDisplay.placeholder = 'mm:ss';
     w.timerDisplay.className = 'timer-display';
-    w.appendChild(w.timerDisplay);
+    w.timerDisplay.id = 'timer-display' + addTimer.value;
+    inputs.appendChild(w.timerDisplay);
 
     w.progressBar = document.createElement('div');
     w.progressBar.className = 'progress-bar';
@@ -105,7 +112,7 @@ export class Timer {
     w.appendChild(w.playBtn);
 
     w.resetBtn = document.createElement('button');
-    w.resetBtn.className = 'reset-button';
+    w.resetBtn.className = 'reset-button even-numbered-horizontal';
     w.resetBtn.textContent = 'reset';
     w.appendChild(w.resetBtn);
 

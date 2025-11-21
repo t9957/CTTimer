@@ -82,14 +82,14 @@ export class Timer {
 
     w.timerName = document.createElement('input');
     w.timerName.type = 'text';
-    w.timerName.placeholder = 'タイマー名';
+    w.timerName.placeholder = 'name';
     w.timerName.className = 'timer-name';
     w.timerName.id = 'timer-name' + addTimer.value;
     inputs.appendChild(w.timerName);
 
     w.timerInitialized = document.createElement('input');
     w.timerInitialized.type = 'text';
-    w.timerInitialized.placeholder = '初期化値';
+    w.timerInitialized.placeholder = 'initial val';
     w.timerInitialized.className = 'timer-initialized even-numbered-horizontal';
     w.timerInitialized.id = 'timer-initialized' + addTimer.value;
     inputs.appendChild(w.timerInitialized);

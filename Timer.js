@@ -1,24 +1,79 @@
 export class Timer {
   parent;
-  wrapper;
-  initialSeconds;
+
+  #wrapper;
+  #initialSec;
+  #remaining;
   #intervalRef;
 
   constructor(container) {
     this.parent = container;
-    this.wrapper = document.createElement('div');
-    this.initialSeconds = null;
-
-    this.#intervalRef = null;
-
-    this.buildDOM();
-    this.attachEvents();
+    this.#wrapper = document.createElement('div');
+    this.#buildDOM();
+    this.#attachEvents();
     return this;
   }
 
-  buildDOM() {
+  play() {
+    switch (Number(this.#wrapper.playBtn.value)) {
+      case 0:
+        this.#start();
+        break;
+      case 1:
+        this.#restart();
+        break;
+      case 2:
+        break;
+      default:
+        Timer.#logOutsideRange("playBtn.value: " + this.#wrapper.playBtn.value);
+        playBtn.value = 0;
+    }
+  }
 
-    const w = this.wrapper;
+  pause() {
+    this.#destroyInterval();
+    this.#wrapper.playBtn.textContent = 'play';
+    this.#wrapper.playBtn.value = 1;
+    return this;
+  }
+
+  reset() {
+    this.#destroyInterval();
+    const init = this.#wrapper.timerInitialized;
+    const disp = this.#wrapper.timerDisplay;
+
+    const state = init.value != "";
+    const sbn = Timer.#inputInterpretation(state ? init.value : disp.value);
+    this.#initialSec = sbn;
+    if (!state) {
+      init.value = Timer.#formatTime(this.#initialSec);
+    }
+    disp.value = Timer.#formatTime(this.#initialSec);
+    this.#remaining = this.#initialSec;
+    this.#updateExterior();
+
+    switch (Number(this.#wrapper.playBtn.value)) {
+      case 0:
+        break;
+      case 1:
+        this.pause();
+        break;
+      case 2:
+        this.#restart();
+        break;
+      default:
+        Timer.#logOutsideRange("playBtn.value: " + this.#wrapper.playBtn.value);
+        this.#wrapper.playBtn.value = 0;
+    }
+    return this;
+  }
+
+  remove() {
+    this.#destroyInterval().parent.removeChild(this.#wrapper);
+  }
+
+  #buildDOM() {
+    const w = this.#wrapper;
     w.className = 'timer';
 
     w.timerName = document.createElement('input');
@@ -36,7 +91,7 @@ export class Timer {
     w.timerDisplay = document.createElement('input');
     w.timerDisplay.type = 'text';
     w.timerDisplay.placeholder = 'mm:ss';
-    w.timerDisplay.className = 'timer-display'
+    w.timerDisplay.className = 'timer-display';
     w.appendChild(w.timerDisplay);
 
     w.progressBar = document.createElement('div');
@@ -52,7 +107,6 @@ export class Timer {
     w.resetBtn = document.createElement('button');
     w.resetBtn.className = 'reset-button';
     w.resetBtn.textContent = 'reset';
-    w.resetBtn.value = 0;
     w.appendChild(w.resetBtn);
 
     w.closeBtn = document.createElement('button');
@@ -65,130 +119,71 @@ export class Timer {
     return this;
   }
 
-  attachEvents() {
-    const playBtn = this.wrapper.playBtn;
+  #attachEvents() {
+    const playBtn = this.#wrapper.playBtn;
     playBtn.addEventListener('click', () => {
       switch (Number(playBtn.value)) {
         case 0:
-          this.start();
-          playBtn.value = 2;
+          this.#start();
           break;
         case 1:
-          this.restart();
-          playBtn.value = 2;
+          this.#restart();
           break;
         case 2:
           this.pause();
-          playBtn.value = 1;
           break;
         default:
-          console.log('playBtn.value: ' + playBtn.value
-            + ' This is outside the expected range.');
+          Timer.#logOutsideRange("playBtn.value: " + this.#wrapper.playBtn.value);
           playBtn.value = 0;
       }
     });
-    this.wrapper.resetBtn.addEventListener('click', () => {
+    this.#wrapper.resetBtn.addEventListener('click', () => {
       this.reset();
     });
-    this.wrapper.closeBtn.addEventListener('click', () => {
+    this.#wrapper.closeBtn.addEventListener('click', () => {
       this.remove();
     });
 
     return this;
   }
 
-  start() {
-    let timerNameVal = this.wrapper.timerName.value;
+  #start() {
+    let timerNameVal = this.#wrapper.timerName.value;
     if (!timerNameVal) {
       const addTimer = document.getElementById('addTimer');
       timerNameVal = 'timer' + addTimer.value;
       addTimer.value++;
-      this.wrapper.timerName.value = timerNameVal;
+      this.#wrapper.timerName.value = timerNameVal;
     }
     this.reset().#newInterval();
-
+    this.#wrapper.playBtn.textContent = 'pause';
+    this.#wrapper.playBtn.value = 2;
     return this;
   }
 
-  restart() { }
-
-  pause() {
-    this.#destroyInterval();
+  #restart() {
+    const init = this.#wrapper.timerInitialized;
+    const disp = this.#wrapper.timerDisplay;
+    this.#initialSec = Timer.#inputInterpretation(init.value);
+    this.#remaining = Timer.#inputInterpretation(disp.value);
+    this.#updateExterior();
+    this.#newInterval();
+    this.#wrapper.playBtn.textContent = 'pause';
+    this.#wrapper.playBtn.value = 2;
     return this;
-  }
-
-  reset() {
-    const init = this.wrapper.timerInitialized;
-    const disp = this.wrapper.timerDisplay;
-
-    let state = init.value != "";
-    let inputTime;
-    if (state) {
-      inputTime = init.value.split(':').reverse();
-      state = 1;
-    } else {
-      inputTime = disp.value.split(':').reverse();
-    }
-    inputTime = inputTime.map((i) => Number(i));
-    let shouldBeNow = 0;
-    shouldBeNow += inputTime[0] > 0 ? inputTime[0] : 0;
-    shouldBeNow += inputTime[1] > 0 ? inputTime[1] * 60 : 0;
-    shouldBeNow += inputTime[2] > 0 ? inputTime[2] * 3600 : 0;
-    shouldBeNow += inputTime[3] > 0 ? inputTime[3] * 3600 * 24 : 0;
-    shouldBeNow += inputTime[4] > 0 ? inputTime[4] * 3600 * 24 * 31 : 0;
-    shouldBeNow += inputTime[5] > 0 ? inputTime[5] * 3600 * 24 * 365 : 0;
-    this.initialSeconds = shouldBeNow;
-    if (!state) {
-      init.value = Timer.#formatTime(this.initialSeconds);
-    }
-    disp.value = Timer.#formatTime(this.initialSeconds);
-    this.wrapper.resetBtn.value = this.initialSeconds;
-
-    switch (Number(this.wrapper.playBtn.value)) {
-      case 0:
-        break;
-      case 1:
-        this.pause();
-        break;
-      case 2:
-        this.restart();
-        break;
-      default:
-        console.log('playBtn.value: ' + this.wrapper.playBtn.value
-          + ' This is outside the expected range.');
-        this.wrapper.playBtn.value = 0;
-    }
-    return this;
-  }
-
-  remove() {
-    this.#destroyInterval().parent.removeChild(this.wrapper);
   }
 
   #newInterval() {
-    const bar = this.wrapper.progressBar
-    let time = this.initialSeconds;
     this.#intervalRef = setInterval(() => {
-      time--;
-      if (time >= 0) {
-        this.wrapper.value = Timer.#formatTime(time);
-        bar.style.width = 100 - ((this.initialSeconds - time) / this.initialSeconds) * 100 + '%';
-        if (time < 22) {
-          bar.style.backgroundColor = '#777777';
-        } else if (time < 45) {
-          bar.style.backgroundColor = 'rgb(185, 114, 114)';
-        } else if (time < 90) {
-          bar.style.backgroundColor = 'rgb(218, 218, 138)';
-        } else if (time < 1800) {
-          bar.style.backgroundColor = 'rgb(102, 209, 143)';
-        } else {
-          bar.style.backgroundColor = 'rgb(138, 179, 218)';
-        }
-        if (time == 0) {
-          time = this.initialSeconds;
+      this.#remaining--;
+      if (this.#remaining >= 0) {
+        this.#updateExterior();
+        if (this.#remaining == 0) {
+          this.#remaining = this.#initialSec;
         }
       } else {
-        clearInterval(this.#intervalRef);
+        Timer.#logOutsideRange("this.#remaining: " + this.#remaining);
+        this.#destroyInterval();
       }
     }, 1000);
     return this;
@@ -199,10 +194,45 @@ export class Timer {
     return this;
   }
 
+  #updateExterior() {
+    const bar = this.#wrapper.progressBar;
+    this.#wrapper.timerDisplay.value = Timer.#formatTime(this.#remaining);
+    let status = (this.#remaining / this.#initialSec);
+    status = status > 1 ? 1 : status;
+    bar.style.width = status * 100 + '%';
+    if (this.#remaining < 22) {
+      bar.style.backgroundColor = '#777777';
+    } else if (this.#remaining < 45) {
+      bar.style.backgroundColor = 'rgb(185, 114, 114)';
+    } else if (this.#remaining < 90) {
+      bar.style.backgroundColor = 'rgb(218, 218, 138)';
+    } else if (this.#remaining < 1800) {
+      bar.style.backgroundColor = 'rgb(102, 209, 143)';
+    } else {
+      bar.style.backgroundColor = 'rgb(138, 179, 218)';
+    }
+    return this;
+  }
+
+  static #inputInterpretation(str) {
+    const inputTime = str.split(':').reverse().map((i) => Number(i));
+    let shouldBeNow = 0;
+    shouldBeNow += inputTime[0] > 0 ? inputTime[0] : 0;
+    shouldBeNow += inputTime[1] > 0 ? inputTime[1] * 60 : 0;
+    shouldBeNow += inputTime[2] > 0 ? inputTime[2] * 3600 : 0;
+    shouldBeNow += inputTime[3] > 0 ? inputTime[3] * 3600 * 24 : 0;
+    shouldBeNow += inputTime[4] > 0 ? inputTime[4] * 3600 * 24 * 31 : 0;
+    shouldBeNow += inputTime[5] > 0 ? inputTime[5] * 3600 * 24 * 365 : 0;
+    return shouldBeNow;
+  }
 
   static #formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes < 10 ? '0' : ''}${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  }
+
+  static #logOutsideRange(str) {
+    console.log(str + '\n This is outside the expected range.');
   }
 }

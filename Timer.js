@@ -2,6 +2,7 @@ export class Timer {
   parent;
 
   #wrapper;
+  #initialUnix;
   #initialSec;
   #remaining;
   #intervalRef;
@@ -66,7 +67,7 @@ export class Timer {
         this.#restart();
         break;
       default:
-        Timer.#logOutsideRange("playBtn.value: " + this.#wrapper.playBtn.value);
+        Timer.#logOutsideRange('playBtn.value: ' + this.#wrapper.playBtn.value);
         this.#wrapper.playBtn.value = 0;
     }
     return this;
@@ -77,6 +78,7 @@ export class Timer {
   }
 
   #buildDOM() {
+    const buildId = parseInt(Math.random() * 10000000);
     const w = this.#wrapper;
     w.className = 'timer';
 
@@ -88,21 +90,21 @@ export class Timer {
     w.timerName.type = 'text';
     w.timerName.placeholder = 'name';
     w.timerName.className = 'timer-name';
-    w.timerName.id = 'timer-name' + addTimer.value;
+    w.timerName.id = 'timer-name-' + buildId;
     inputs.appendChild(w.timerName);
 
     w.timerInitialized = document.createElement('input');
     w.timerInitialized.type = 'text';
     w.timerInitialized.placeholder = 'initial val';
     w.timerInitialized.className = 'timer-initialized even-numbered-horizontal';
-    w.timerInitialized.id = 'timer-initialized' + addTimer.value;
+    w.timerInitialized.id = 'timer-initialized-' + buildId;
     inputs.appendChild(w.timerInitialized);
 
     w.timerDisplay = document.createElement('input');
     w.timerDisplay.type = 'text';
     w.timerDisplay.placeholder = 'mm:ss';
     w.timerDisplay.className = 'timer-display';
-    w.timerDisplay.id = 'timer-display' + addTimer.value;
+    w.timerDisplay.id = 'timer-display-' + buildId;
     inputs.appendChild(w.timerDisplay);
 
     w.progressBar = document.createElement('div');
@@ -167,6 +169,8 @@ export class Timer {
       this.#wrapper.timerName.value = timerNameVal;
     }
     if (!this.reset()) return false;
+    const syncGap = (this.#remaining - this.#initialSec) * 1000;
+    this.#initialUnix = Date.now() + syncGap;
     this.#newInterval();
     this.#wrapper.playBtn.textContent = 'pause';
     this.#wrapper.playBtn.value = 2;
@@ -178,6 +182,8 @@ export class Timer {
     const disp = this.#wrapper.timerDisplay;
     this.#initialSec = Timer.#inputInterpretation(init.value);
     this.#remaining = Timer.#inputInterpretation(disp.value);
+    const syncGap = (this.#remaining - this.#initialSec) * 1000;
+    this.#initialUnix = Date.now() + syncGap;
     this.#updateExterior();
     this.#newInterval();
     this.#wrapper.playBtn.textContent = 'pause';
@@ -187,6 +193,9 @@ export class Timer {
 
   #newInterval() {
     this.#intervalRef = setInterval(() => {
+      if (this.#remaining % 10 == 0) {
+        this.#lookAtTheClock();
+      }
       this.#remaining--;
       if (this.#remaining >= 0) {
         this.#updateExterior();
@@ -199,6 +208,13 @@ export class Timer {
       }
     }, 1000);
     return this;
+  }
+
+  #lookAtTheClock() {
+    const now = Date.now() - 300;
+    let elapsedTime = parseInt((now - this.#initialUnix) / 1000) % this.#initialSec;
+    const r = this.#initialSec - elapsedTime;
+    this.#remaining = r;
   }
 
   #destroyInterval() {
@@ -227,7 +243,7 @@ export class Timer {
   }
 
   static #inputInterpretation(str) {
-    const inputTime = str.split(':').reverse().map((i) => Number(i));
+    const inputTime = str.split(':').reverse().map((i) => parseInt(i));
     let shouldBeNow = 0;
     shouldBeNow += inputTime[0] > 0 ? inputTime[0] : 0;
     shouldBeNow += inputTime[1] > 0 ? inputTime[1] * 60 : 0;

@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const addTimerButton = document.getElementById('addTimer');
   addTimerButton.value = 1;
 
-  // タイマーの追加
   addTimerButton.addEventListener('click', function () {
     new Timer(timersContainer);
   });

@@ -44,6 +44,10 @@ export class Timer {
 
     const state = init.value != "";
     const sbn = Timer.#inputInterpretation(state ? init.value : disp.value);
+    if (!sbn > 0) {
+      Timer.#logOutsideRange('reject it. shouldBeNow: ' + sbn);
+      return false;
+    }
     this.#initialSec = sbn;
     if (!state) {
       init.value = Timer.#formatTime(this.#initialSec);
@@ -162,7 +166,8 @@ export class Timer {
       addTimer.value++;
       this.#wrapper.timerName.value = timerNameVal;
     }
-    this.reset().#newInterval();
+    if (!this.reset()) return false;
+    this.#newInterval();
     this.#wrapper.playBtn.textContent = 'pause';
     this.#wrapper.playBtn.value = 2;
     return this;

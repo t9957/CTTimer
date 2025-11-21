@@ -26,7 +26,7 @@ export class Timer {
       case 2:
         break;
       default:
-        Timer.#logOutsideRange("playBtn.value: " + this.#wrapper.playBtn.value);
+        Timer.#logOutsideRange('playBtn.value: ' + this.#wrapper.playBtn.value);
         playBtn.value = 0;
     }
   }
@@ -43,7 +43,7 @@ export class Timer {
     const init = this.#wrapper.timerInitialized;
     const disp = this.#wrapper.timerDisplay;
 
-    const state = init.value != "";
+    const state = init.value != '';
     const sbn = Timer.#inputInterpretation(state ? init.value : disp.value);
     if (!sbn > 0) {
       Timer.#logOutsideRange('reject it. shouldBeNow: ' + sbn);
@@ -83,7 +83,7 @@ export class Timer {
     w.className = 'timer';
 
     const inputs = document.createElement('div');
-    inputs.className = 'timer-inputs'
+    inputs.className = 'timer-inputs';
     w.appendChild(inputs);
 
     w.timerName = document.createElement('input');
@@ -146,7 +146,7 @@ export class Timer {
           this.pause();
           break;
         default:
-          Timer.#logOutsideRange("playBtn.value: " + this.#wrapper.playBtn.value);
+          Timer.#logOutsideRange('playBtn.value: ' + this.#wrapper.playBtn.value);
           playBtn.value = 0;
       }
     });
@@ -203,7 +203,7 @@ export class Timer {
           this.#remaining = this.#initialSec;
         }
       } else {
-        Timer.#logOutsideRange("this.#remaining: " + this.#remaining);
+        Timer.#logOutsideRange('this.#remaining: ' + this.#remaining);
         this.#destroyInterval();
       }
     }, 1000);
